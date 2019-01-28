@@ -35,7 +35,7 @@ if (( EUID != 0 )); then
 fi
 
 #Check that what we need is installed
-for command in parted losetup tune2fs md5sum e2fsck resize2fs; do
+for command in parted losetup tune2fs md5sum e2fsck resize2fs rsync; do
   which $command 2>&1 >/dev/null
   if (( $? != 0 )); then
     echo "ERROR: $command is not installed."
@@ -43,10 +43,12 @@ for command in parted losetup tune2fs md5sum e2fsck resize2fs; do
   fi
 done
 
+set -x
 #Copy to new file if requested
 if [ -n "$2" ]; then
   echo "Copying $1 to $2..."
-  cp --reflink=auto --sparse=always "$1" "$2"
+  #cp --reflink=auto --sparse=always "$1" "$2"
+  rsync -a --progress "$1" "$2"
   if (( $? != 0 )); then
     echo "ERROR: Could not copy file..."
     exit -5
@@ -56,9 +58,9 @@ if [ -n "$2" ]; then
   img="$2"
 fi
 
+
 # cleanup at script exit
 trap cleanup ERR EXIT
-
 #Gather info
 beforesize=$(ls -lh "$img" | cut -d ' ' -f 5)
 parted_output=$(parted -ms "$img" unit B print | tail -n 1)
@@ -69,13 +71,14 @@ tune2fs_output=$(tune2fs -l "$loopback")
 currentsize=$(echo "$tune2fs_output" | grep '^Block count:' | tr -d ' ' | cut -d ':' -f 2)
 blocksize=$(echo "$tune2fs_output" | grep '^Block size:' | tr -d ' ' | cut -d ':' -f 2)
 
+
 #Check if we should make pi expand rootfs on next boot
 if [ "$should_skip_autoexpand" = false ]; then
   #Make pi expand rootfs on next boot
   mountdir=$(mktemp -d)
   mount "$loopback" "$mountdir"
 
-  ln -sf "${mountdir}/etc/systemd/system/basic.target.wants/armbian-resize-filesystem.service" /lib/systemd/system/armbian-resize-filesystem.service
+  ln -sf /lib/systemd/system/armbian-resize-filesystem.service "${mountdir}/etc/systemd/system/basic.target.wants/armbian-resize-filesystem.service"
   umount "$mountdir"
 else
   echo "Skipping autoexpanding process..."
@@ -103,7 +106,6 @@ resize2fs -p "$loopback" $minsize
 if [[ $? != 0 ]]; then
   echo "ERROR: resize2fs failed..."
   mount "$loopback" "$mountdir"
-  mv "$mountdir/etc/rc.local.bak" "$mountdir/etc/rc.local"
   umount "$mountdir"
   losetup -d "$loopback"
   exit -7
