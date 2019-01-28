@@ -13,14 +13,14 @@ If using Ubuntu, you will likely see an error about `e2fsck` being out of date a
 
 ## Installation ##
 ```bash
-wget https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh
-chmod +x pishrink.sh
-sudo mv pishrink.sh /usr/local/bin
+wget https://raw.githubusercontent.com/dedalodaelus/ArmbianShrink/master/armbianshrink.sh
+chmod +x armbianshrink.sh
+sudo mv armbianshrink.sh /usr/local/bin
 ```
 
 ## Example ##
 ```bash
-[user@localhost PiShrink]$ sudo pishrink.sh pi.img
+[user@localhost ArmbianShrink]$ sudo armbianshrink.sh armbian.img
 e2fsck 1.42.9 (28-Dec-2013)
 Pass 1: Checking inodes, blocks, and sizes
 Pass 2: Checking directory structure
@@ -39,7 +39,7 @@ Begin pass 4 (max = 7348)
 Updating inode references     XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 The filesystem on /dev/loop1 is now 773603 blocks long.
 
-Shrunk pi.img from 30G to 3.1G
+Shrunk armbian.img from 30G to 3.1G
 ```
 
 ## Contributing ##
